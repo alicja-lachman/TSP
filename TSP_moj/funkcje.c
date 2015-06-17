@@ -4,6 +4,62 @@
 #include <conio.h>
 #include <time.h>
 
+/*funkcja zwracajaca losow¹ liczbe z zakresu <0;zakres-1> */
+int losowanie(int zakres)
+{         
+    return(rand()%zakres);
+}
+
+/*funkcja sprawdzajaca, czy do chromosu nie wylosowano powtarzajacego sie genu (numeru miasta)*/
+int sprawdzPowtorzenia(int *chromosom,int iloscLiczb, int liczba)
+{
+	int i;
+
+	if(iloscLiczb <= 0)
+    return 0;
+	
+	for (i=0; i<iloscLiczb; i++)
+	{
+        if(chromosom[i] == liczba)
+        return 1;       
+    } 
+    return 0;
+}
+/* funkcja zwracajaca wskaznik na tablice wylosowanych rozwiazan */
+/* liczby (kolejnosc odwiedzanych miast) nie mog¹ siê powtarzac */
+int *losuj(int ilosc)
+{
+int *wylosowaneLiczby; 
+int ileWylosowanych;
+int liczba;
+    
+    ileWylosowanych=0;              /*licznik ilosci wylosowanych liczb */
+	wylosowaneLiczby=(int*)malloc((sizeof(int))*ilosc);  /*alokacja pamieci na tablice liczb */
+
+    do               /* losowanie kolejnych liczb oraz sprawdzanie, czy nie ma powtorzen */
+    {
+		liczba = losowanie(ilosc);
+		if(sprawdzPowtorzenia(wylosowaneLiczby,ileWylosowanych,liczba)==0)
+        {
+            wylosowaneLiczby[ileWylosowanych]=liczba;
+            ileWylosowanych++;
+        }
+    }while (ileWylosowanych<ilosc);   
+    
+	return wylosowaneLiczby;
+}
+
+/*funkcja generuj¹ca pierwsze pokolenie rozwi¹zan - rodziców */
+void generujRodzicow(int **rodzice, int iloscMiast, int iloscRodzicow)
+{
+int i;
+
+	srand(time(NULL));       /*inicjalizacja zarodka dla funkcji rand */
+	for(i=0; i<iloscRodzicow; i++)
+	{    
+		rodzice[i] = losuj(iloscMiast);  /*i-ty rodzic wskazuje na wylosowane rozwiazanie*/
+	}
+}
 /* Funkcja obliczajaca koszt podrozy pomiedzy poszczegolnymi miastami */
 /* zgodnie z kolejnosci¹ zawart¹ w chromosomie */
 float obliczKoszt(int iloscMiast, int *chromosom, float **macierzOdleglosci)
@@ -43,67 +99,6 @@ int *temp;
 				rozwiazania[j] = temp;
 			
 		}
-	}
-}
-
-
-
-/*funkcja sprawdzajaca, czy do chromosu nie wylosowano powtarzajacego sie genu (numeru miasta)*/
-int sprawdzPowtorzenia(int *chromosom,int iloscLiczb, int liczba)
-{
-	int i;
-
-	if(iloscLiczb <= 0)
-    return 0;
-	
-	for (i=0; i<iloscLiczb; i++)
-	{
-        if(chromosom[i] == liczba)
-        return 1;       
-    } 
-    return 0;
-}
-
-/*funkcja zwracajaca losow¹ liczbe z zakresu <0;zakres-1> */
-int losowanie(int zakres)
-{         
-    return(rand()%zakres);
-}
-
-
-/* funkcja zwracajaca wskaznik na tablice wylosowanych rozwiazan */
-/* liczby (kolejnosc odwiedzanych miast) nie mog¹ siê powtarzac */
-int *losuj(int ilosc)
-{
-int *wylosowaneLiczby; 
-int ileWylosowanych;
-int liczba;
-    
-    ileWylosowanych=0;              /*licznik ilosci wylosowanych liczb */
-	wylosowaneLiczby=(int*)malloc((sizeof(int))*ilosc);  /*alokacja pamieci na tablice liczb */
-
-    do               /* losowanie kolejnych liczb oraz sprawdzanie, czy nie ma powtorzen */
-    {
-		liczba = losowanie(ilosc);
-		if(sprawdzPowtorzenia(wylosowaneLiczby,ileWylosowanych,liczba)==0)
-        {
-            wylosowaneLiczby[ileWylosowanych]=liczba;
-            ileWylosowanych++;
-        }
-    }while (ileWylosowanych<ilosc);   
-    
-	return wylosowaneLiczby;
-}
-
-/*funkcja generuj¹ca pierwsze pokolenie rozwi¹zan - rodziców */
-void generujRodzicow(int **rodzice, int iloscMiast, int iloscRodzicow)
-{
-int i;
-
-	srand(time(NULL));       /*inicjalizacja zarodka dla funkcji rand */
-	for(i=0; i<iloscRodzicow; i++)
-	{    
-		rodzice[i] = losuj(iloscMiast);  /*i-ty rodzic wskazuje na wylosowane rozwiazanie*/
 	}
 }
 
@@ -157,6 +152,29 @@ int *uzyte, iloscUzytych;
 	}
 }
 
+/*funkcja dokonujaca mutacji  */
+void mutacja(int **pokolenie, int dlugoscGenu, int populacja)
+{  
+	int a,b,c,j,temp,los;
+	
+		srand(time(NULL));    /*inicjalizacja zarodka funkcji rand */
+
+		for(j=0; j<populacja; j++)
+		{
+			los = rand()%2;    
+			if (los==1)        /* prawdopodobienstwo mutacji chromosomu wynosi 50% */
+			{
+			a = (rand()%(populacja-1)+1);  /*wylosowanie liczby z zakresu <1;populacja-1>*/
+			b = rand()%dlugoscGenu;        /*najlepszy osobnik nie bedzie mutowany! */
+			c = rand()%dlugoscGenu;
+			
+			temp = (pokolenie[a])[b];
+			(pokolenie[a])[b] = (pokolenie[a])[c];
+			(pokolenie[a])[c] = temp;	
+			}
+		}
+}
+
 /* funkcja przepisuj¹ca dane z dwuwymiarowej tablicy A do dwuwymiarowej tablicy B */
 void przepisz(int **A, int **B, int iloscWierszy, int iloscKolumn)
 {
@@ -171,27 +189,6 @@ void przepisz(int **A, int **B, int iloscWierszy, int iloscKolumn)
 }
 
 
-/*funkcja dokonujaca mutacji. okreslona jest ilosc mutacji [ilosc powtorzen] w danym pokoleniu  */
-void mutacja(int **pokolenie, int dlugoscGenu, int populacja,int iloscPowtorzen)
-{  
-	int a,b,c,i,j,temp;
 
-	for(i=0; i<iloscPowtorzen; i++)    /*i okresla ilosc mutacji w pokoleniu*/
-		{   
-	
-		srand(time(NULL));    /*inicjalizacja zarodka funkcji rand */
-
-		for(j=0; j<populacja; j++)
-		{
-			a = (rand()%(populacja-1)+1);  /*wylosowanie liczby z zakresu <1;populacja-1*/
-			b = rand()%dlugoscGenu;        /*najlepszy osobnik nie bedzie mutowany! */
-			c= rand()%dlugoscGenu;
-			
-			temp = (pokolenie[a])[b];
-			(pokolenie[a])[b] = (pokolenie[a])[c];
-			(pokolenie[a])[c] = temp;	
-		}
-		}
-}
 
 

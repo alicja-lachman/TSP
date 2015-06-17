@@ -9,7 +9,7 @@ int main(int argc, char* argv[])
 {
    if (argc!=3)
    {
-		printf("Bledna ilosc parametrow!");
+		printf("Bledna ilosc parametrow!\nNacisnij dowolny klawisz, aby zakonczyc");
 		getch();
    }
 
@@ -26,7 +26,8 @@ int main(int argc, char* argv[])
   
 	  if (plikIN == NULL) 
 	  {
-		printf("Blad otwarcia pliku!\n");
+		printf("Blad otwarcia pliku!\nNacisnij dowolny klawisz, aby zakonczyc");
+		getch();
 		return 1;
 	  }
  
@@ -34,7 +35,14 @@ int main(int argc, char* argv[])
 	
 	  while(feof(plikIN) == 0)
 	  {
-		fscanf(plikIN,"%d",&liczbaMiast);
+
+		if (fscanf(plikIN,"%d",&liczbaMiast)!=1)  /*sprawdzenie formatu pliku wejsciowego */
+		{
+			printf("Nieprawidlowy format pliku!\n Nacisnij dowolny klawisz aby zakonczyc");
+			getch();
+			return 1;
+		} else
+		{
 		printf("Liczba miast: %d\n",liczbaMiast);
 		fscanf(plikIN, "%d",&populacja);
 		printf("Ilosc osobnikow w populacji: %d\n",populacja);
@@ -68,14 +76,13 @@ int main(int argc, char* argv[])
 		 sortowanie(pokolenie, liczbaMiast, populacja, macierzOdleglosci);
 	   
 		 if (i%1000==0)
-		 {
-		   printf("Najkrotsza trasa w %d pokoleniu: %f\n",i,obliczKoszt(liczbaMiast,pokolenie[0],macierzOdleglosci));
-		   fprintf (plikOUT, "Najkrotsza trasa w %d pokoleniu: %f\n",i,obliczKoszt(liczbaMiast,pokolenie[0],macierzOdleglosci)); 
-	     }
-	     mutacja(pokolenie,liczbaMiast,populacja,3);
+		 printf("Najkrotsza trasa w %d pokoleniu: %f\n",i,obliczKoszt(liczbaMiast,pokolenie[0],macierzOdleglosci));
+		 fprintf (plikOUT, "%f\n",obliczKoszt(liczbaMiast,pokolenie[0],macierzOdleglosci)); 
+	     mutacja(pokolenie,liczbaMiast,populacja);
 	     przepisz(pokolenie,rodzice,populacja,liczbaMiast);
       } 
-
+	 fclose(plikOUT);
+	 printf("Najlepsze rozwiazanie o koszcie %f to:\n",obliczKoszt(liczbaMiast,pokolenie[0],macierzOdleglosci));
      printf("[ ");             /*wypisanie najlepszego rozwiazania */
   
      for (i=0;i<liczbaMiast;i++)
@@ -83,7 +90,7 @@ int main(int argc, char* argv[])
 	   printf("%d ",rodzice[0][i]);
      }
      printf("]");
-     fclose(plikOUT);
+     
 
  
      for(i = 0; i < liczbaMiast; i++)  /*zwalnianie pamiêci*/
@@ -104,4 +111,5 @@ int main(int argc, char* argv[])
    
      return 0;
    }
+ }
 }
